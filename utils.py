@@ -5,7 +5,7 @@ from functools import partial
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
-def process_template(template_file: str, data: Dict[str, Any] | None) -> str:
+def process_template(template_file: str, data: Dict[str, Any] | None = None) -> str:
     jinja_env = Environment(
         loader=FileSystemLoader(searchpath="./"), autoescape=select_autoescape()
     )

@@ -10,9 +10,9 @@ from utils import encode_image, get_system_prompt, get_user_prompt
 
 @dataclass
 class Models:
-    GPT3_TURBO = "gpt-3.5-turbo"
-    GPT4_TURBO = "gpt-4-turbo"
-    GPT4O = "gpt-4o"
+    GPT3_TURBO: str = "gpt-3.5-turbo"
+    GPT4_TURBO: str = "gpt-4-turbo"
+    GPT4O: str = "gpt-4o"
 
     def dict(self) -> Dict[str, str]:
         return {k: str(v) for k, v in asdict(self).items()}
@@ -110,7 +110,7 @@ def get_image_url_from_path(image_path: str) -> str:
     return "data:image/jpeg;base64," + encode_image(image_path)
 
 
-def get_image_explanation(image_path: str) -> str:
+def get_image_explanation(image_path: str, model: str) -> str:
     """
     Gets an explanation for an image from the OpenAI API.
 
@@ -123,10 +123,22 @@ def get_image_explanation(image_path: str) -> str:
     resp = send_image_request(
         image_url=get_image_url_from_path(image_path),
         system_content=system_prompt,
+        model=model,
     )
     return retrieve_ai_answer(resp)
 
+
 def get_text_explanation(prompt: str, model: str) -> str:
+    """
+    Gets an explanation for a text prompt from the OpenAI API.
+
+    Args:
+        prompt (str): The text prompt to explain.
+        model (str): The model to use for the request.
+
+    Returns:
+        str: The explanation for the text prompt.
+    """
     resp = send_text_request(
         user_content=get_user_prompt(prompt),
         system_content=system_prompt,
@@ -135,6 +147,23 @@ def get_text_explanation(prompt: str, model: str) -> str:
     return retrieve_ai_answer(resp)
 
 
-get_gpt3_explanation = partial(get_image_explanation, model=models.GPT3_TURBO)
+get_gpt3_explanation = partial(get_text_explanation, model=models.GPT3_TURBO)
 get_gpt4_explanation = partial(get_text_explanation, model=models.GPT4_TURBO)
-get_gpt4o_explanation = partial(get_text_explanation, model=models.GPT4O)
+get_gpt4o_text_explanation = partial(get_text_explanation, model=models.GPT4O)
+get_gpt4o_image_explanation = partial(get_image_explanation, model=models.GPT4O)
+
+
+def __test_explainer():
+    print("*" * 100)
+    print("Testing for GPT-3.5-turbo")
+    prompt = "Why did the Python programmer get cold during the winter? Because they didn't C# 😄🐍"
+    print(get_gpt3_explanation(prompt))
+
+    print("*" * 100)
+    print("Testing for GPT-4o IMAGE")
+    image_path = "examples/x_post.png"
+    print(get_gpt4o_image_explanation(image_path))
+
+
+if __name__ == "__main__":
+    __test_explainer()
