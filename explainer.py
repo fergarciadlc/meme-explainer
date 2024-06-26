@@ -84,7 +84,7 @@ def send_image_request(
     )
 
 
-def retrieve_ai_answer(response: ChatCompletion) -> str:
+def retrieve_model_answer(response: ChatCompletion) -> str:
     """
     Retrieves the AI's answer from the response.
 
@@ -125,7 +125,7 @@ def get_image_explanation(image_path: str, model: str) -> str:
         system_content=system_prompt,
         model=model,
     )
-    return retrieve_ai_answer(resp)
+    return retrieve_model_answer(resp)
 
 
 def get_text_explanation(prompt: str, model: str) -> str:
@@ -144,7 +144,7 @@ def get_text_explanation(prompt: str, model: str) -> str:
         system_content=system_prompt,
         model=model,
     )
-    return retrieve_ai_answer(resp)
+    return retrieve_model_answer(resp)
 
 
 get_gpt3_explanation = partial(get_text_explanation, model=models.GPT3_TURBO)
