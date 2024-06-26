@@ -1,11 +1,10 @@
-from functools import partial
-from dataclasses import dataclass, asdict
+import logging
 from typing import Dict
+from dataclasses import dataclass, asdict
+from utils import encode_image, get_system_prompt, get_user_prompt
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion
-
-from utils import encode_image, get_system_prompt, get_user_prompt
 
 
 @dataclass
@@ -18,53 +17,48 @@ class Models:
         return {k: str(v) for k, v in asdict(self).items()}
 
 
-models = Models()
+class MemeExplainer:
+    def __init__(self):
+        self.models = Models()
+        self.client = OpenAI()
+        self.system_prompt = get_system_prompt()
 
-client = OpenAI()
-system_prompt = get_system_prompt()
+    def send_request_to_api(
+        self, messages: list, model: str, max_tokens: int = None
+    ) -> ChatCompletion:
+        """Sends a request to the OpenAI API."""
+        return self.client.chat.completions.create(
+            model=model, messages=messages, max_tokens=max_tokens
+        )
 
-
-def send_text_request(
-    user_content: str, system_content: str, model: str = models.GPT3_TURBO
-) -> ChatCompletion:
-    """
-    Sends a text request to the OpenAI API.
-
-    Args:
-        user_content (str): The content provided by the user.
-        system_content (str): The content provided by the system.
-        model (str): The model to use for the request. Default is GPT3_TURBO.
-
-    Returns:
-        ChatCompletion: The response from the OpenAI API.
-    """
-    return client.chat.completions.create(
-        model=model,
-        messages=[
+    def send_text_request_to_api(
+        self,
+        user_content: str,
+        system_content: str,
+        model: str = None,
+        max_tokens: int = None,
+    ) -> ChatCompletion:
+        """Sends a text request to the OpenAI API."""
+        if model is None:
+            model = self.models.GPT3_TURBO
+        messages = [
             {"role": "system", "content": system_content},
             {"role": "user", "content": user_content},
-        ],
-    )
+        ]
+        return self.send_request_to_api(messages, model, max_tokens)
 
-
-def send_image_request(
-    image_url: str, system_content: str, model: str = models.GPT4O, detail: str = "low"
-) -> ChatCompletion:
-    """
-    Sends an image request to the OpenAI API.
-
-    Args:
-        image_url (str): The URL of the image to analyze.
-        system_content (str): The content provided by the system.
-        model (str): The model to use for the request. Default is GPT4O.
-        detail (str): The detail level of the image. Default is "low".
-
-    Returns:
-        ChatCompletion: The response from the OpenAI API.
-    """
-    return client.chat.completions.create(
-        model=model,
-        messages=[
+    def send_image_request_to_api(
+        self,
+        image_url: str,
+        system_content: str,
+        model: str = None,
+        detail: str = "low",
+        max_tokens: int = 300,
+    ) -> ChatCompletion:
+        """Sends an image request to the OpenAI API."""
+        if model is None:
+            model = self.models.GPT4O
+        messages = [
             {"role": "system", "content": system_content},
             {
                 "role": "user",
@@ -79,91 +73,62 @@ def send_image_request(
                     },
                 ],
             },
-        ],
-        max_tokens=300,
-    )
+        ]
+        return self.send_request_to_api(messages, model, max_tokens)
+
+    @staticmethod
+    def parse_model_response(resp: ChatCompletion) -> str:
+        """Parses the response from the OpenAI API."""
+        return resp.choices[0].message.content
+
+    def get_image_url_from_path(self, image_path: str) -> str:
+        """Encodes an image file to a base64 URL."""
+        return "data:image/jpeg;base64," + encode_image(image_path)
+
+    def fetch_image_explanation(self, image_path: str, model: str = None) -> str:
+        """Gets an explanation for an image from the OpenAI API."""
+        resp = self.send_image_request_to_api(
+            image_url=self.get_image_url_from_path(image_path),
+            system_content=self.system_prompt,
+            model=model,
+        )
+        return self.parse_model_response(resp)
+
+    def fetch_text_explanation(self, prompt: str, model: str = None) -> str:
+        """Gets an explanation for a text prompt from the OpenAI API."""
+        resp = self.send_text_request_to_api(
+            user_content=get_user_prompt(prompt),
+            system_content=self.system_prompt,
+            model=model,
+        )
+        return self.parse_model_response(resp)
+
+    def get_gpt3_explanation(self, prompt: str) -> str:
+        return self.fetch_text_explanation(prompt, model=self.models.GPT3_TURBO)
+
+    def get_gpt4_explanation(self, prompt: str) -> str:
+        return self.fetch_text_explanation(prompt, model=self.models.GPT4_TURBO)
+
+    def get_gpt4o_text_explanation(self, prompt: str) -> str:
+        return self.fetch_text_explanation(prompt, model=self.models.GPT4O)
+
+    def get_gpt4o_image_explanation(self, image_path: str) -> str:
+        return self.fetch_image_explanation(image_path, model=self.models.GPT4O)
 
 
-def retrieve_model_answer(response: ChatCompletion) -> str:
-    """
-    Retrieves the AI's answer from the response.
-
-    Args:
-        response (ChatCompletion): The response from the OpenAI API.
-
-    Returns:
-        str: The content of the AI's answer.
-    """
-    return response.choices[0].message.content
-
-
-def get_image_url_from_path(image_path: str) -> str:
-    """
-    Encodes an image file to a base64 URL.
-
-    Args:
-        image_path (str): The file path of the image.
-
-    Returns:
-        str: The base64-encoded URL of the image.
-    """
-    return "data:image/jpeg;base64," + encode_image(image_path)
-
-
-def get_image_explanation(image_path: str, model: str) -> str:
-    """
-    Gets an explanation for an image from the OpenAI API.
-
-    Args:
-        image_path (str): The file path of the image.
-
-    Returns:
-        str: The explanation for the image.
-    """
-    resp = send_image_request(
-        image_url=get_image_url_from_path(image_path),
-        system_content=system_prompt,
-        model=model,
-    )
-    return retrieve_model_answer(resp)
-
-
-def get_text_explanation(prompt: str, model: str) -> str:
-    """
-    Gets an explanation for a text prompt from the OpenAI API.
-
-    Args:
-        prompt (str): The text prompt to explain.
-        model (str): The model to use for the request.
-
-    Returns:
-        str: The explanation for the text prompt.
-    """
-    resp = send_text_request(
-        user_content=get_user_prompt(prompt),
-        system_content=system_prompt,
-        model=model,
-    )
-    return retrieve_model_answer(resp)
-
-
-get_gpt3_explanation = partial(get_text_explanation, model=models.GPT3_TURBO)
-get_gpt4_explanation = partial(get_text_explanation, model=models.GPT4_TURBO)
-get_gpt4o_text_explanation = partial(get_text_explanation, model=models.GPT4O)
-get_gpt4o_image_explanation = partial(get_image_explanation, model=models.GPT4O)
-
-
-def __test_explainer():
+def __test_explainer(explainer: MemeExplainer) -> None:
+    logging.basicConfig(level=logging.INFO)
     print("*" * 100)
     print("Testing for GPT-3.5-turbo")
     prompt = "Why did the Python programmer get cold during the winter? Because they didn't C# 😄🐍"
-    print(get_gpt3_explanation(prompt))
+    print(explainer.get_gpt3_explanation(prompt))
 
     print("*" * 100)
     print("Testing for GPT-4o IMAGE")
     image_path = "examples/x_post.png"
-    print(get_gpt4o_image_explanation(image_path))
+    print(explainer.get_gpt4o_image_explanation(image_path))
 
 
 if __name__ == "__main__":
-    __test_explainer()
+    explainer = MemeExplainer()
+    __test_explainer(explainer)
