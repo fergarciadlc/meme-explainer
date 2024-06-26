@@ -18,18 +18,24 @@ class Models:
 
 
 class MemeExplainer:
-    def __init__(self):
+    def __init__(self, openai_api_key: str = None):
         self.models = Models()
-        self.client = OpenAI()
+        self.client = OpenAI(api_key=openai_api_key)
         self.system_prompt = get_system_prompt()
+        self.logger = logging.getLogger(__name__)
 
     def send_request_to_api(
         self, messages: list, model: str, max_tokens: int = None
     ) -> ChatCompletion:
         """Sends a request to the OpenAI API."""
-        return self.client.chat.completions.create(
-            model=model, messages=messages, max_tokens=max_tokens
-        )
+        try:
+            self.logger.info(f"Sending request to model: {model}")
+            return self.client.chat.completions.create(
+                model=model, messages=messages, max_tokens=max_tokens
+            )
+        except Exception as e:
+            self.logger.error(f"API request failed: {e}")
+            return None
 
     def send_text_request_to_api(
         self,
@@ -79,7 +85,9 @@ class MemeExplainer:
     @staticmethod
     def parse_model_response(resp: ChatCompletion) -> str:
         """Parses the response from the OpenAI API."""
-        return resp.choices[0].message.content
+        if resp and resp.choices:
+            return resp.choices[0].message.content
+        return "No response received from the model."
 
     def get_image_url_from_path(self, image_path: str) -> str:
         """Encodes an image file to a base64 URL."""
@@ -116,8 +124,11 @@ class MemeExplainer:
         return self.fetch_image_explanation(image_path, model=self.models.GPT4O)
 
 
-def __test_explainer(explainer: MemeExplainer) -> None:
+def __test_explainer() -> None:
+    import logging
+
     logging.basicConfig(level=logging.INFO)
+    explainer = MemeExplainer()
     print("*" * 100)
     print("Testing for GPT-3.5-turbo")
     prompt = "Why did the Python programmer get cold during the winter? Because they didn't C# 😄🐍"
@@ -130,5 +141,4 @@ def __test_explainer(explainer: MemeExplainer) -> None:
 
 
 if __name__ == "__main__":
-    explainer = MemeExplainer()
-    __test_explainer(explainer)
+    __test_explainer()
