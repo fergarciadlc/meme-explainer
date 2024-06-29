@@ -30,3 +30,44 @@ archive.zip
 
 # macOS
 .DS_Store
+
+# React
+# Node modules
+node_modules/
+
+# Build output
+build/
+dist/
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage directory used by testing tools
+coverage/
+
+
+# Tailwind CSS
+tailwind.config.js
+postcss.config.js
+
+# Editor directories and files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# React specific
+public/static/
+public/*.ico
+public/*.png
+public/*.svg
+
+# Optional: lock files (if you prefer not to include them)
+package-lock.json
+yarn.lock
