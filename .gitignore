@@ -47,11 +47,6 @@ yarn-error.log*
 # Coverage directory used by testing tools
 coverage/
 
-
-# Tailwind CSS
-tailwind.config.js
-postcss.config.js
-
 # Editor directories and files
 .idea/
 .vscode/
