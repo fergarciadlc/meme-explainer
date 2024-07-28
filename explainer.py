@@ -1,28 +1,32 @@
 import logging
-from typing import Dict
-from dataclasses import dataclass, asdict
+from typing import Tuple
 from utils import encode_image, get_system_prompt, get_user_prompt
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion
 
 
-@dataclass
-class Models:
-    GPT3_TURBO: str = "gpt-3.5-turbo"
-    GPT4_TURBO: str = "gpt-4-turbo"
-    GPT4O: str = "gpt-4o"
-
-    def dict(self) -> Dict[str, str]:
-        return {k: str(v) for k, v in asdict(self).items()}
-
-
 class MemeExplainer:
-    def __init__(self, openai_api_key: str = None):
-        self.models = Models()
-        self.client = OpenAI(api_key=openai_api_key)
-        self.system_prompt = get_system_prompt()
+    def __init__(self, openai_api_key: str = None, default_model: str = "gpt-4o-mini"):
         self.logger = logging.getLogger(__name__)
+        self.client = OpenAI(api_key=openai_api_key)
+        self.set_default_model(default_model)
+        self.system_prompt = get_system_prompt()
+
+    def set_default_model(self, model: str) -> None:
+        available_models = self.get_available_models()
+        if model not in available_models:
+            logging.debug(f"Available models: {available_models}")
+            raise ValueError(f"Model {model} is not supported.")
+        self.logger.info(f"Setting default model to {model}")
+        self.default_model = model
+
+    def set_system_prompt(self, prompt: str) -> None:
+        self.system_prompt = prompt
+
+    def get_available_models(self) -> Tuple[str]:
+        models = self.client.models.list()
+        return tuple([model.id for model in models.data])
 
     def send_request_to_api(
         self, messages: list, model: str, max_tokens: int = None
@@ -45,8 +49,7 @@ class MemeExplainer:
         max_tokens: int = None,
     ) -> ChatCompletion:
         """Sends a text request to the OpenAI API."""
-        if model is None:
-            model = self.models.GPT3_TURBO
+        model = model or self.default_model
         messages = [
             {"role": "system", "content": system_content},
             {"role": "user", "content": user_content},
@@ -62,8 +65,7 @@ class MemeExplainer:
         max_tokens: int = 300,
     ) -> ChatCompletion:
         """Sends an image request to the OpenAI API."""
-        if model is None:
-            model = self.models.GPT4O
+        model = model or self.default_model
         messages = [
             {"role": "system", "content": system_content},
             {
@@ -89,7 +91,8 @@ class MemeExplainer:
             return resp.choices[0].message.content
         return "No response received from the model."
 
-    def get_image_url_from_path(self, image_path: str) -> str:
+    @staticmethod
+    def get_image_url_from_path(image_path: str) -> str:
         """Encodes an image file to a base64 URL."""
         return "data:image/jpeg;base64," + encode_image(image_path)
 
@@ -111,18 +114,6 @@ class MemeExplainer:
         )
         return self.parse_model_response(resp)
 
-    def get_gpt3_explanation(self, prompt: str) -> str:
-        return self.fetch_text_explanation(prompt, model=self.models.GPT3_TURBO)
-
-    def get_gpt4_explanation(self, prompt: str) -> str:
-        return self.fetch_text_explanation(prompt, model=self.models.GPT4_TURBO)
-
-    def get_gpt4o_text_explanation(self, prompt: str) -> str:
-        return self.fetch_text_explanation(prompt, model=self.models.GPT4O)
-
-    def get_gpt4o_image_explanation(self, image_path: str) -> str:
-        return self.fetch_image_explanation(image_path, model=self.models.GPT4O)
-
 
 def __test_explainer() -> None:
     import logging
@@ -130,14 +121,14 @@ def __test_explainer() -> None:
     logging.basicConfig(level=logging.INFO)
     explainer = MemeExplainer()
     print("*" * 100)
-    print("Testing for GPT-3.5-turbo")
+    print("Testing for Text")
     prompt = "Why did the Python programmer get cold during the winter? Because they didn't C# 😄🐍"
-    print(explainer.get_gpt3_explanation(prompt))
+    print(explainer.fetch_text_explanation(prompt))
 
     print("*" * 100)
-    print("Testing for GPT-4o IMAGE")
+    print("Testing for IMAGE")
     image_path = "examples/x_post.png"
-    print(explainer.get_gpt4o_image_explanation(image_path))
+    print(explainer.fetch_image_explanation(image_path=image_path, model="gpt-4o"))
 
 
 if __name__ == "__main__":
