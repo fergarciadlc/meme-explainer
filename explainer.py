@@ -14,6 +14,7 @@ class MemeExplainer:
         self.system_prompt = get_system_prompt()
 
     def set_default_model(self, model: str) -> None:
+        """Sets the default model for Meme Explainer Class."""
         available_models = self.get_available_models()
         if model not in available_models:
             logging.debug(f"Available models: {available_models}")
@@ -22,9 +23,11 @@ class MemeExplainer:
         self.default_model = model
 
     def set_system_prompt(self, prompt: str) -> None:
+        """Sets the system prompt"""
         self.system_prompt = prompt
 
     def get_available_models(self) -> Tuple[str]:
+        """Gets the list of available models from the OpenAI API."""
         models = self.client.models.list()
         return tuple([model.id for model in models.data])
 
