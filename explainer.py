@@ -12,12 +12,15 @@ class MemeExplainer:
     DEFAULT_IMAGE_DETAIL = "low"
 
     def __init__(
-        self, openai_api_key: Optional[str] = None, default_model: str = DEFAULT_MODEL
+        self,
+        openai_api_key: Optional[str] = None,
+        default_model: str = DEFAULT_MODEL,
+        language: str = "en",
     ):
         self.logger = logging.getLogger(__name__)
         self.client = OpenAI(api_key=openai_api_key)
         self.set_default_model(default_model)
-        self.system_prompt = get_system_prompt()
+        self.language = language
 
     # Configuration methods
     def set_default_model(self, model: str) -> None:
@@ -29,9 +32,9 @@ class MemeExplainer:
         self.logger.info(f"Setting default model to {model}")
         self.default_model = model
 
-    def set_system_prompt(self, prompt: str) -> None:
-        """Sets the system prompt"""
-        self.system_prompt = prompt
+    def set_language(self, language: str) -> None:
+        """Sets the language."""
+        self.language = language
 
     # API interaction methods
     def send_request_to_api(
@@ -97,20 +100,24 @@ class MemeExplainer:
         return self.send_request_to_api(messages, model, max_tokens)
 
     # Explanation methods
-    def fetch_image_explanation(self, image_path: str, model: str = None) -> str:
-        """Gets an explanation for an image from the OpenAI API."""
+    def fetch_image_explanation(
+        self, image_path: str, model: str = None, language: Optional[str] = None
+    ) -> str:
+        lang = language or self.language
         resp = self.send_image_request_to_api(
             image_url=self.get_image_url_from_path(image_path),
-            system_content=self.system_prompt,
+            system_content=get_system_prompt(lang=lang),
             model=model,
         )
         return self.parse_model_response(resp)
 
-    def fetch_text_explanation(self, prompt: str, model: str = None) -> str:
-        """Gets an explanation for a text prompt from the OpenAI API."""
+    def fetch_text_explanation(
+        self, prompt: str, model: str = None, language: Optional[str] = None
+    ) -> str:
+        lang = language or self.language
         resp = self.send_text_request_to_api(
-            user_content=get_user_prompt(prompt),
-            system_content=self.system_prompt,
+            user_content=get_user_prompt(prompt, lang=lang),
+            system_content=get_system_prompt(lang=lang),
             model=model,
         )
         return self.parse_model_response(resp)
@@ -142,7 +149,10 @@ def __test_explainer() -> None:
     print("*" * 100)
     print("Testing for Text")
     prompt = "Why did the Python programmer get cold during the winter? Because they didn't C# 😄🐍"
+    print("English")
     print(explainer.fetch_text_explanation(prompt))
+    print("Spanish")
+    print(explainer.fetch_text_explanation(prompt, language="es"))
 
     print("*" * 100)
     print("Testing for IMAGE")

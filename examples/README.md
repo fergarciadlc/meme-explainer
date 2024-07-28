@@ -40,3 +40,24 @@ The punchline? The screenshot shows values with increasing losses instead of dec
 
 Classic tech humor right there. 🏋️‍♂️📈
 ```
+
+With GPT-4o-mini:
+```
+****************************************************************************************************
+Testing for Text
+English
+INFO:__main__:Sending request to model: gpt-4o-mini
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+This joke is a clever play on programming languages! The humor comes from "C#" sounding like "see sharp," suggesting the Python programmer didn’t have the necessary "vision" or "awareness" to be warm—hence, they got cold! Plus, it’s a lighthearted jab at the rivalry between programming languages, mixing coding concepts with a relatable winter struggle. All in all, it’s a chill pun that’s sure to tickle the funny bones of any coder! 🐍❄️
+Spanish
+INFO:__main__:Sending request to model: gpt-4o-mini
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Este chiste es un clásico juego de palabras que combina dos lenguajes de programación: Python y C#. La primera parte del chiste plantea una situación absurda: un programador de Python se enfría en invierno. La gracia viene de la respuesta, "Because they didn't C#," que suena como "no se abrigaron", pero al mismo tiempo, "C#" es un lenguaje de programación. 
+
+Así que el humor surge de la mezcla ingeniosa de la necesidad de abrigarse para no pasar frío y la referencia técnica al lenguaje de programación, creando un doble sentido que solo los programadores pueden apreciar plenamente. ¡Perfecto para calentar el ambiente de un frío invierno!
+****************************************************************************************************
+Testing for IMAGE
+INFO:__main__:Sending request to model: gpt-4o
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Alright, here's the scoop: This tweet is hilarious because it plays on a major concept in machine learning—gradient ascent. In the image, it looks like someone's screen is filled with training logs for a machine learning model, showing improvements over time. The phrase "gradient ascent has been achieved internally" is funny because it’s making an everyday statement sound dramatically scientific. It's like someone finally fixed their model but decided to announce it with the flair and grandeur of a major scientific breakthrough!
+```
