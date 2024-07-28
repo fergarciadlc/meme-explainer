@@ -32,7 +32,7 @@ class TextExplanationRequest(BaseModel):
 @app.post("/explain/text")
 async def explain_text(request: TextExplanationRequest) -> Dict[str, str]:
     try:
-        explanation = meme_explainer.get_gpt3_explanation(request.text)
+        explanation = meme_explainer.fetch_text_explanation(request.text)
         return {"explanation": explanation}
     except Exception as e:
         logger.error(f"Error explaining text: {str(e)}")
@@ -51,7 +51,9 @@ async def explain_image(file: UploadFile = File(...)) -> Dict[str, str]:
         with open(temp_file_path, "wb") as buffer:
             buffer.write(await file.read())
 
-        explanation = meme_explainer.get_gpt4o_image_explanation(temp_file_path)
+        explanation = meme_explainer.fetch_image_explanation(
+            image_path=temp_file_path, model="gpt-4o"
+        )
         return {"explanation": explanation}
     except Exception as e:
         logger.error(f"Error explaining image: {str(e)}")
