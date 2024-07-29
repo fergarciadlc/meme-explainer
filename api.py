@@ -3,7 +3,7 @@ import logging
 from typing import Dict
 import uuid
 
-from fastapi import FastAPI, File, UploadFile, HTTPException, Query
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -11,6 +11,7 @@ from explainer import MemeExplainer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+SUPPORTED_LANGUAGES = ("en", "es")
 
 app = FastAPI()
 meme_explainer = MemeExplainer()
@@ -33,10 +34,26 @@ class TextExplanationRequest(BaseModel):
     text: str
 
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+
+def validate_language(
+    lang: str = Query(default="en", description="Language for explanation")
+):
+    if lang not in SUPPORTED_LANGUAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported language. Supported languages are: {', '.join(SUPPORTED_LANGUAGES)}",
+        )
+    return lang
+
+
 @app.post("/explain/text")
 async def explain_text(
     request: TextExplanationRequest,
-    language: str = Query(default="en", description="Language for explanation"),
+    language: str = Depends(validate_language),
 ) -> Dict[str, str]:
     try:
         explanation = meme_explainer.fetch_text_explanation(
