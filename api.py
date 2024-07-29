@@ -37,7 +37,6 @@ class TextExplanationRequest(BaseModel):
 async def explain_text(
     request: TextExplanationRequest,
     language: str = Query(default="en", description="Language for explanation"),
-    # model: str = Query(default="gpt-4o", description="Model to use for explanation"),
 ) -> Dict[str, str]:
     try:
         explanation = meme_explainer.fetch_text_explanation(
@@ -59,7 +58,6 @@ async def explain_text(
 async def explain_image(
     file: UploadFile = File(...),
     language: str = Query(default="en", description="Language for explanation"),
-    # model: str = Query(default="gpt-4o", description="Model to use for explanation"),
 ) -> Dict[str, str]:
     if not file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
         raise HTTPException(
