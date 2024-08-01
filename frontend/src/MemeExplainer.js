@@ -28,6 +28,7 @@ const MemeExplainer = () => {
   const [error, setError] = useState(null);
   const [model, setModel] = useState('');
   const [language, setLanguage] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -50,30 +51,32 @@ const MemeExplainer = () => {
     try {
       let response;
       let data;
-
+  
       if (memeImage) {
         const formData = new FormData();
         formData.append('file', memeImage);
-        response = await fetch('http://localhost:8000/explain/image', {
+        response = await fetch(`http://localhost:8000/explain/image?lang=${selectedLanguage}`, {
           method: 'POST',
           body: formData,
         });
       } else if (memeText) {
-        response = await fetch('http://localhost:8000/explain/text', {
+        response = await fetch(`http://localhost:8000/explain/text?lang=${selectedLanguage}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ text: memeText }),
+          body: JSON.stringify({ 
+            text: memeText
+          }),
         });
       } else {
         throw new Error('Please provide either text or an image');
       }
-
+  
       if (!response.ok) {
         throw new Error('API request failed');
       }
-
+  
       data = await response.json();
       setExplanation(data.explanation);
       setModel(data.model);
@@ -117,6 +120,22 @@ const MemeExplainer = () => {
                     <img src={imagePreview} alt="Uploaded meme" className="max-w-full h-auto rounded-lg" />
                   </div>
                 )}
+
+                {/* Language selector moved here and styled to be smaller and subtle */}
+                <div className="flex items-center justify-end space-x-2 text-sm">
+                  <label htmlFor="language-select" className="text-gray-500">
+                    Explanation Language:
+                  </label>
+                  <select
+                    id="language-select"
+                    value={selectedLanguage}
+                    onChange={(e) => setSelectedLanguage(e.target.value)}
+                    className="py-1 px-2 border border-gray-300 rounded-md text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                  </select>
+                </div>
 
                 <button
                   className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-200 flex items-center justify-center"

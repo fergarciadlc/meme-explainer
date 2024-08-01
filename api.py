@@ -74,7 +74,7 @@ async def explain_text(
 @app.post("/explain/image")
 async def explain_image(
     file: UploadFile = File(...),
-    language: str = Query(default="en", description="Language for explanation"),
+    language: str = Depends(validate_language),
 ) -> Dict[str, str]:
     if not file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
         raise HTTPException(
