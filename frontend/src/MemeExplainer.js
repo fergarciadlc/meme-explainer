@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Send, Info } from 'lucide-react';
+import { Upload, Send } from 'lucide-react';
 
 const TypewriterEffect = ({ text }) => {
   const [displayedText, setDisplayedText] = useState('');
@@ -137,19 +137,23 @@ const MemeExplainer = () => {
 
               <div className="w-full lg:w-1/2">
                 {explanation ? (
-                  <div className="bg-gray-50 rounded-lg p-4 h-full">
-                    <h2 className="text-xl font-semibold mb-2 text-gray-800">Explanation:</h2>
-                    <TypewriterEffect text={explanation} />
+                  <div className="bg-gray-50 rounded-lg p-4 h-full relative">
                     {(model || language) && (
-                      <div className="mt-4 flex items-center text-sm text-gray-500">
-                        <Info size={16} className="mr-2" />
-                        <span>
-                          {model && `Model: ${model}`}
-                          {model && language && ' | '}
-                          {language && `Language: ${language}`}
-                        </span>
+                      <div className="absolute top-2 right-2 flex space-x-2">
+                        {model && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Model: {model}
+                          </span>
+                        )}
+                        {language && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Lang: {language}
+                          </span>
+                        )}
                       </div>
                     )}
+                    <h2 className="text-xl font-semibold mb-2 text-gray-800">Explanation:</h2>
+                    <TypewriterEffect text={explanation} />
                   </div>
                 ) : (
                   <div className="bg-gray-50 rounded-lg p-4 h-full flex items-center justify-center">
