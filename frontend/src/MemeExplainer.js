@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Send } from 'lucide-react';
+import { Upload, Send, Info } from 'lucide-react';
 
 const TypewriterEffect = ({ text }) => {
   const [displayedText, setDisplayedText] = useState('');
@@ -10,7 +10,7 @@ const TypewriterEffect = ({ text }) => {
       const timer = setTimeout(() => {
         setDisplayedText((prevText) => prevText + text[index]);
         setIndex((prevIndex) => prevIndex + 1);
-      }, 6);
+      }, 7);
 
       return () => clearTimeout(timer);
     }
@@ -26,6 +26,8 @@ const MemeExplainer = () => {
   const [explanation, setExplanation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [model, setModel] = useState('');
+  const [language, setLanguage] = useState('');
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -43,6 +45,8 @@ const MemeExplainer = () => {
     setIsLoading(true);
     setExplanation('');
     setError(null);
+    setModel('');
+    setLanguage('');
     try {
       let response;
       let data;
@@ -72,6 +76,8 @@ const MemeExplainer = () => {
 
       data = await response.json();
       setExplanation(data.explanation);
+      setModel(data.model);
+      setLanguage(data.language);
     } catch (error) {
       setError(`An error occurred: ${error.message}`);
       console.error('Error:', error);
@@ -134,6 +140,16 @@ const MemeExplainer = () => {
                   <div className="bg-gray-50 rounded-lg p-4 h-full">
                     <h2 className="text-xl font-semibold mb-2 text-gray-800">Explanation:</h2>
                     <TypewriterEffect text={explanation} />
+                    {(model || language) && (
+                      <div className="mt-4 flex items-center text-sm text-gray-500">
+                        <Info size={16} className="mr-2" />
+                        <span>
+                          {model && `Model: ${model}`}
+                          {model && language && ' | '}
+                          {language && `Language: ${language}`}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="bg-gray-50 rounded-lg p-4 h-full flex items-center justify-center">
