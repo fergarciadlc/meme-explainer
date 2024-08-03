@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Send } from 'lucide-react';
+import DynamicTitle from './DynamicTitle';
 
 const TypewriterEffect = ({ text }) => {
   const [displayedText, setDisplayedText] = useState('');
@@ -10,7 +11,7 @@ const TypewriterEffect = ({ text }) => {
       const timer = setTimeout(() => {
         setDisplayedText((prevText) => prevText + text[index]);
         setIndex((prevIndex) => prevIndex + 1);
-      }, 7);
+      }, 5);
 
       return () => clearTimeout(timer);
     }
@@ -92,10 +93,7 @@ const MemeExplainer = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl w-full space-y-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900">Hi there, Meme Lover</h1>
-          <p className="mt-3 text-xl text-gray-600">What would you like to explain?</p>
-        </div>
+      <DynamicTitle />
         
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
           <div className="p-6 space-y-6">
