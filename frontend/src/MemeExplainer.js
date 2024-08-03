@@ -2,6 +2,37 @@ import React, { useState, useEffect } from 'react';
 import { Upload, Send } from 'lucide-react';
 import DynamicTitle from './DynamicTitle';
 
+// Configuration
+const API_BASE_URL = process.env.REACT_APP_API_URL;
+
+// API endpoints
+const ENDPOINTS = {
+  EXPLAIN_IMAGE: '/explain/image',
+  EXPLAIN_TEXT: '/explain/text'
+};
+
+// API functions
+const explainImage = async (imageFile, lang) => {
+  const formData = new FormData();
+  formData.append('file', imageFile);
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.EXPLAIN_IMAGE}?lang=${lang}`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!response.ok) throw new Error('API request failed');
+  return response.json();
+};
+
+const explainText = async (text, lang) => {
+  const response = await fetch(`${API_BASE_URL}${ENDPOINTS.EXPLAIN_TEXT}?lang=${lang}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!response.ok) throw new Error('API request failed');
+  return response.json();
+};
+
 const TypewriterEffect = ({ text }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [index, setIndex] = useState(0);
@@ -20,6 +51,7 @@ const TypewriterEffect = ({ text }) => {
   return <p className="text-gray-600">{displayedText}</p>;
 };
 
+// Main component
 const MemeExplainer = () => {
   const [memeText, setMemeText] = useState('');
   const [memeImage, setMemeImage] = useState(null);
@@ -50,35 +82,14 @@ const MemeExplainer = () => {
     setModel('');
     setLanguage('');
     try {
-      let response;
       let data;
-  
       if (memeImage) {
-        const formData = new FormData();
-        formData.append('file', memeImage);
-        response = await fetch(`http://localhost:8000/explain/image?lang=${selectedLanguage}`, {
-          method: 'POST',
-          body: formData,
-        });
+        data = await explainImage(memeImage, selectedLanguage);
       } else if (memeText) {
-        response = await fetch(`http://localhost:8000/explain/text?lang=${selectedLanguage}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            text: memeText
-          }),
-        });
+        data = await explainText(memeText, selectedLanguage);
       } else {
         throw new Error('Please provide either text or an image');
       }
-  
-      if (!response.ok) {
-        throw new Error('API request failed');
-      }
-  
-      data = await response.json();
       setExplanation(data.explanation);
       setModel(data.model);
       setLanguage(data.language);
@@ -93,8 +104,8 @@ const MemeExplainer = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl w-full space-y-8">
-      <DynamicTitle />
-        
+        <DynamicTitle />
+
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
           <div className="p-6 space-y-6">
             <div className="flex flex-col lg:flex-row gap-6">
@@ -106,7 +117,7 @@ const MemeExplainer = () => {
                   onChange={(e) => setMemeText(e.target.value)}
                   placeholder="Type your meme text here..."
                 />
-                
+
                 <label className="flex items-center justify-center w-full p-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
                   <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
                   <Upload className="mr-2 text-gray-500" />
@@ -136,21 +147,21 @@ const MemeExplainer = () => {
                 </div>
 
                 <button
-                  className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-200 flex items-center justify-center"
-                  onClick={explainMeme}
-                  disabled={isLoading || (!memeText && !memeImage)}
-                >
-                  {isLoading ? (
-                    <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                  ) : (
-                    <Send className="mr-2" />
-                  )}
-                  {isLoading ? 'Explaining...' : 'Explain Meme'}
-                </button>
-              </div>
+              className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-200 flex items-center justify-center"
+              onClick={explainMeme}
+              disabled={isLoading || (!memeText && !memeImage)}
+            >
+              {isLoading ? (
+                <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              ) : (
+                <Send className="mr-2" />
+              )}
+              {isLoading ? 'Explaining...' : 'Explain Meme'}
+            </button>
+          </div>
 
               <div className="w-full lg:w-1/2">
                 {explanation ? (
@@ -184,7 +195,7 @@ const MemeExplainer = () => {
           {error && (
             <div className="bg-red-100 border-t-4 border-red-500 rounded-b text-red-900 px-4 py-3 shadow-md" role="alert">
               <div className="flex">
-                <div className="py-1"><svg className="fill-current h-6 w-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z"/></svg></div>
+                <div className="py-1"><svg className="fill-current h-6 w-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" /></svg></div>
                 <div>
                   <p className="font-bold">Error</p>
                   <p className="text-sm">{error}</p>
