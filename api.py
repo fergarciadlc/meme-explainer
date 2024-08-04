@@ -89,7 +89,7 @@ async def explain_image(
 
     logger.info(f"Explaining image: {file.filename}")
     # Ensure the tmp directory exists
-    tmp_dir = "tmp"
+    tmp_dir = os.getenv("TMP_DIR", "tmp")
     if not os.path.exists(tmp_dir):
         os.makedirs(tmp_dir)
     # Create a temporary file path
