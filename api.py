@@ -88,7 +88,12 @@ async def explain_image(
         )
 
     logger.info(f"Explaining image: {file.filename}")
-    temp_file_path = f"temp_{uuid.uuid4()}_{file.filename}"
+    # Ensure the tmp directory exists
+    tmp_dir = "tmp"
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
+    # Create a temporary file path
+    temp_file_path = os.path.join(tmp_dir, f"temp_{uuid.uuid4()}_{file.filename}")
     try:
         with open(temp_file_path, "wb") as buffer:
             buffer.write(await file.read())
