@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const titles = [
   "Meme Explainer",
-  "Oh yes, true comedy",
+  "Ah yes, true comedy",
   "Welcome, humor detective!",
   "Ah, nothing like a good laugh… followed by a lengthy explanation.",
   "Comedy crisis detected!",
